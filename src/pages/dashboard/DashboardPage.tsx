@@ -82,7 +82,7 @@ export function DashboardPage() {
           <SheetHeader>
             <SheetTitle>Employees</SheetTitle>
           </SheetHeader>
-          <div className="mt-6 flex flex-col gap-6">
+          <div className="mt-2 flex flex-col gap-6 px-6 pb-6">
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Import CSV</p>
               <CSVUpload onDone={() => setPanel(null)} />
@@ -102,7 +102,7 @@ export function DashboardPage() {
           <SheetHeader>
             <SheetTitle>Templates</SheetTitle>
           </SheetHeader>
-          <div className="mt-6">
+          <div className="px-6 pb-6">
             <TemplateManager />
           </div>
         </SheetContent>
@@ -114,7 +114,7 @@ export function DashboardPage() {
           <SheetHeader>
             <SheetTitle>Branding</SheetTitle>
           </SheetHeader>
-          <div className="mt-6">
+          <div className="px-6 pb-6">
             <BrandingSettings />
           </div>
         </SheetContent>
@@ -126,7 +126,7 @@ export function DashboardPage() {
           <SheetHeader>
             <SheetTitle>Import Employees</SheetTitle>
           </SheetHeader>
-          <div className="mt-6">
+          <div className="px-6 pb-6">
             <CSVUpload onDone={() => setPanel(null)} />
           </div>
         </SheetContent>
