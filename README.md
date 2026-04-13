@@ -1,3 +1,5 @@
+<div align="center">
+
 # ShiftCanvas
 
 ![Live](https://img.shields.io/badge/live-joemighty.github.io%2FShiftCanvas-blue?style=plastic)
@@ -10,6 +12,8 @@ A frontend-only employee scheduling web app. No backend. No account. Everything 
 
 **[Open ShiftCanvas](https://joemighty.github.io/ShiftCanvas/)**
 
+</div>
+
 ---
 
 ## Features
@@ -19,7 +23,7 @@ A frontend-only employee scheduling web app. No backend. No account. Everything 
 - **Time Off** - Mark employees as sick, on leave, or unavailable
 - **Templates** - Save and reapply schedule structures week to week
 - **Branding** - Upload a logo, set a company name and accent colour
-- **Print View** - Clean, branded printout with no UI chrome
+- **Print View** - Clean, branded landscape printout with no UI chrome
 - **Dark Mode** - Full light and dark theme support
 - **Keyboard Shortcuts** - Navigate the app without touching the mouse
 
