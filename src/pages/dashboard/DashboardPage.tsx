@@ -9,13 +9,19 @@ import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Separator } from '@/components/ui/separator'
 import { useBrandingStore } from '@/stores/brandingStore'
-import { Users, Layers, Palette, Printer, Upload } from 'lucide-react'
+import { Users, Layers, Palette, Printer, Upload, Sun, Moon } from 'lucide-react'
+import type { PanelType } from '@/App'
 
-type PanelType = 'employees' | 'templates' | 'branding' | 'csv' | null
+interface DashboardPageProps {
+  theme: 'light' | 'dark'
+  onToggleTheme: () => void
+  panel: PanelType
+  onPanelChange: (panel: PanelType) => void
+}
 
-export function DashboardPage() {
+export function DashboardPage({ theme, onToggleTheme, panel, onPanelChange }: DashboardPageProps) {
   const { branding } = useBrandingStore()
-  const [panel, setPanel] = useState<PanelType>(null)
+  const setPanel = onPanelChange
   const [printing, setPrinting] = useState(false)
 
   function handlePrint() {
@@ -31,30 +37,30 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Top bar */}
-      <header className="bg-white border-b border-gray-100 px-6 py-3 flex items-center justify-between">
+      <header className="bg-background border-b border-border px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {branding.logo && (
             <img src={branding.logo} alt="Logo" className="h-7 object-contain" />
           )}
-          <span className="font-semibold text-gray-900 tracking-tight">
+          <span className="font-semibold text-foreground tracking-tight">
             {branding.companyName || 'ShiftCanvas'}
           </span>
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" className="gap-2 text-gray-600" onClick={() => setPanel('employees')}>
+          <Button variant="ghost" size="sm" className="gap-2" onClick={() => setPanel('employees')}>
             <Users className="w-4 h-4" />
             Employees
           </Button>
 
-          <Button variant="ghost" size="sm" className="gap-2 text-gray-600" onClick={() => setPanel('templates')}>
+          <Button variant="ghost" size="sm" className="gap-2" onClick={() => setPanel('templates')}>
             <Layers className="w-4 h-4" />
             Templates
           </Button>
 
-          <Button variant="ghost" size="sm" className="gap-2 text-gray-600" onClick={() => setPanel('branding')}>
+          <Button variant="ghost" size="sm" className="gap-2" onClick={() => setPanel('branding')}>
             <Palette className="w-4 h-4" />
             Branding
           </Button>
@@ -68,11 +74,19 @@ export function DashboardPage() {
             <Printer className="w-4 h-4" />
             Print
           </Button>
+
+          <button
+            onClick={onToggleTheme}
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            aria-label="Toggle theme"
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
         </div>
       </header>
 
       {/* Main content */}
-      <main className="p-6">
+      <main className="p-6 bg-muted/20 min-h-[calc(100vh-57px)]">
         <ScheduleGrid />
       </main>
 

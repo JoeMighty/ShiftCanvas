@@ -53,11 +53,11 @@ export function ScheduleGrid() {
       </div>
 
       {/* Grid */}
-      <div className="overflow-x-auto rounded-lg border border-gray-100">
+      <div className="overflow-x-auto rounded-lg border border-border bg-card">
         <table className="border-collapse text-sm min-w-full">
           <thead>
-            <tr className="bg-gray-50">
-              <th className="text-left px-4 py-2.5 text-xs font-medium text-gray-500 w-40 sticky left-0 bg-gray-50 z-10 border-r border-gray-100">
+            <tr className="bg-muted/40">
+              <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground w-40 sticky left-0 bg-muted/40 z-10 border-r border-border">
                 Employee
               </th>
               {days.map((day) => {
@@ -66,11 +66,11 @@ export function ScheduleGrid() {
                   <th
                     key={day.format('YYYY-MM-DD')}
                     className={`text-center px-2 py-2.5 text-xs font-medium w-24 ${
-                      isWeekend ? 'text-gray-400' : 'text-gray-600'
+                      isWeekend ? 'text-muted-foreground/40' : 'text-muted-foreground'
                     }`}
                   >
                     <div>{day.format('ddd')}</div>
-                    <div className={`text-base font-semibold ${isWeekend ? 'text-gray-300' : 'text-gray-800'}`}>
+                    <div className={`text-base font-semibold ${isWeekend ? 'text-muted-foreground/30' : 'text-foreground'}`}>
                       {day.format('D')}
                     </div>
                   </th>
@@ -80,15 +80,15 @@ export function ScheduleGrid() {
           </thead>
           <tbody>
             {employees.map((emp) => (
-              <tr key={emp.id} className="hover:bg-gray-50/50">
-                <td className="px-4 py-2 sticky left-0 bg-white z-10 border-r border-gray-100">
+              <tr key={emp.id} className="hover:bg-muted/20 transition-colors">
+                <td className="px-4 py-2 sticky left-0 bg-card z-10 border-r border-border">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center text-[10px] font-semibold text-blue-600 shrink-0">
+                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-semibold text-primary shrink-0">
                       {emp.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-gray-800 truncate max-w-[100px]">{emp.name}</p>
-                      {emp.role && <p className="text-[10px] text-gray-400 truncate max-w-[100px]">{emp.role}</p>}
+                      <p className="text-xs font-medium text-foreground truncate max-w-[100px]">{emp.name}</p>
+                      {emp.role && <p className="text-[10px] text-muted-foreground truncate max-w-[100px]">{emp.role}</p>}
                     </div>
                   </div>
                 </td>

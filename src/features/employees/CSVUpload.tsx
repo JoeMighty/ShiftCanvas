@@ -37,7 +37,7 @@ export function CSVUpload({ onDone }: CSVUploadProps) {
       {/* Drop zone */}
       <div
         className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
-          dragging ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+          dragging ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30' : 'border-border hover:border-muted-foreground/40'
         }`}
         onClick={() => inputRef.current?.click()}
         onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
@@ -49,9 +49,17 @@ export function CSVUpload({ onDone }: CSVUploadProps) {
           if (file) handleFile(file)
         }}
       >
-        <Upload className="w-6 h-6 mx-auto mb-2 text-gray-400" />
-        <p className="text-sm text-gray-600 font-medium">Drop a CSV file here or click to browse</p>
-        <p className="text-xs text-gray-400 mt-1">Columns: name (required), role (optional)</p>
+        <Upload className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
+        <p className="text-sm text-foreground font-medium">Drop a CSV file here or click to browse</p>
+        <p className="text-xs text-muted-foreground mt-1">Columns: name (required), role (optional)</p>
+        <a
+          href="sample-employees.csv"
+          download
+          onClick={e => e.stopPropagation()}
+          className="text-xs text-blue-500 hover:underline mt-2 inline-block"
+        >
+          Download sample CSV
+        </a>
         <input
           ref={inputRef}
           type="file"

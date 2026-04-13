@@ -43,8 +43,8 @@ export function ShiftCell({ shift, onAssign, onChangeType, onRemove, isWeekend }
     return (
       <td
         className={cn(
-          'h-12 w-24 border border-gray-100 cursor-pointer hover:bg-blue-50 transition-colors text-center',
-          isWeekend && 'bg-gray-50'
+          'h-12 w-24 border border-border cursor-pointer hover:bg-primary/5 transition-colors text-center',
+          isWeekend && 'bg-muted/30'
         )}
         onClick={handleEmpty}
       />
@@ -52,7 +52,7 @@ export function ShiftCell({ shift, onAssign, onChangeType, onRemove, isWeekend }
   }
 
   return (
-    <td className="h-12 w-24 border border-gray-100 p-0.5">
+    <td className="h-12 w-24 border border-border p-0.5">
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger
           className={cn(
