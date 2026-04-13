@@ -44,7 +44,7 @@ export function LandingPage({ onGetStarted, theme, onToggleTheme }: LandingPageP
       </header>
 
       {/* Hero */}
-      <section className="flex flex-col items-center px-6 pt-24 pb-4 text-center relative overflow-hidden">
+      <section className="w-full flex flex-col items-center px-6 pt-24 pb-4 text-center relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-blue-500/8 dark:bg-blue-400/10 rounded-full blur-3xl" />
         </div>
@@ -54,7 +54,7 @@ export function LandingPage({ onGetStarted, theme, onToggleTheme }: LandingPageP
             Free to use. No sign-up. Runs entirely in your browser.
           </div>
 
-          <h1 className="text-5xl sm:text-6xl font-semibold tracking-tight leading-[1.1]">
+          <h1 className="text-5xl sm:text-6xl font-semibold tracking-tight leading-[1.1] text-center">
             Employee scheduling,
             <br />
             <span className="text-muted-foreground">beautifully simple.</span>
