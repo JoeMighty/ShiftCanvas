@@ -7,14 +7,14 @@ interface CustomTypesState {
   types: CustomShiftType[]
   addType: (label: string, colour: string) => void
   removeType: (id: string) => void
-  hydrate: () => void
+  hydrate: () => Promise<void>
 }
 
 export const useCustomTypesStore = create<CustomTypesState>((set, get) => ({
   types: [],
 
-  hydrate() {
-    set({ types: loadCustomTypes() })
+  async hydrate() {
+    set({ types: await loadCustomTypes() })
   },
 
   addType(label, colour) {

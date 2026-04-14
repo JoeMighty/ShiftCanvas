@@ -32,7 +32,7 @@ interface ScheduleState {
   getShift: (employeeId: string, date: string) => Shift | undefined
   setShiftType: (employeeId: string, date: string, type: ShiftType) => void
   undo: () => boolean
-  hydrate: () => void
+  hydrate: () => Promise<void>
 }
 
 export const useScheduleStore = create<ScheduleState>((set, get) => ({
@@ -40,10 +40,10 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
   shiftMap: {},
   weekStart: '',
 
-  hydrate() {
-    const stored = loadWeekStart()
+  async hydrate() {
+    const stored = await loadWeekStart()
     const weekStart = stored || dayjs().startOf('week').add(1, 'day').format('YYYY-MM-DD')
-    const shifts = loadSchedule()
+    const shifts = await loadSchedule()
     _history = []
     set({ shifts, shiftMap: buildMap(shifts), weekStart })
   },

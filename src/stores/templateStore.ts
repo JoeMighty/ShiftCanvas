@@ -7,14 +7,14 @@ interface TemplateState {
   templates: Template[]
   saveTemplate: (name: string, shifts: Template['schedule']) => void
   deleteTemplate: (id: string) => void
-  hydrate: () => void
+  hydrate: () => Promise<void>
 }
 
 export const useTemplateStore = create<TemplateState>((set, get) => ({
   templates: [],
 
-  hydrate() {
-    set({ templates: loadTemplates() })
+  async hydrate() {
+    set({ templates: await loadTemplates() })
   },
 
   saveTemplate(name, shifts) {

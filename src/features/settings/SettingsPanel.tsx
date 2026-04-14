@@ -21,6 +21,7 @@ export function SettingsPanel() {
 
   const [newTypeLabel, setNewTypeLabel] = useState('')
   const [newTypeColour, setNewTypeColour] = useState('#6366f1')
+  const [thresholdInput, setThresholdInput] = useState(String(preferences.hoursThreshold ?? 40))
 
   function handleAddType() {
     const label = newTypeLabel.trim()
@@ -30,25 +31,26 @@ export function SettingsPanel() {
     setNewTypeColour('#6366f1')
   }
 
-  function handleExport() {
-    const data = exportAllData()
+  async function handleExport() {
+    const data = await exportAllData()
     exportDataJSON(data)
     toast.success('Backup downloaded')
   }
 
   function handleImportFile(file: File) {
     const reader = new FileReader()
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const data = JSON.parse(e.target?.result as string) as Record<string, unknown>
-        importAllData(data)
-        // Re-hydrate all stores
-        useEmployeesStore.getState().hydrate()
-        useScheduleStore.getState().hydrate()
-        useTemplateStore.getState().hydrate()
-        useBrandingStore.getState().hydrate()
-        usePreferencesStore.getState().hydrate()
-        useCustomTypesStore.getState().hydrate()
+        await importAllData(data)
+        await Promise.all([
+          useEmployeesStore.getState().hydrate(),
+          useScheduleStore.getState().hydrate(),
+          useTemplateStore.getState().hydrate(),
+          useBrandingStore.getState().hydrate(),
+          usePreferencesStore.getState().hydrate(),
+          useCustomTypesStore.getState().hydrate(),
+        ])
         toast.success('Data restored from backup')
       } catch {
         toast.error('Invalid backup file')
@@ -57,16 +59,27 @@ export function SettingsPanel() {
     reader.readAsText(file)
   }
 
-  function handleClearAll() {
+  async function handleClearAll() {
     if (!window.confirm('Clear all data? This cannot be undone.')) return
-    clearAllData()
+    await clearAllData()
     useEmployeesStore.getState().setEmployees([])
     useScheduleStore.getState().setShifts([])
-    useTemplateStore.getState().hydrate()
-    useBrandingStore.getState().hydrate()
-    usePreferencesStore.getState().hydrate()
-    useCustomTypesStore.getState().hydrate()
+    await Promise.all([
+      useTemplateStore.getState().hydrate(),
+      useBrandingStore.getState().hydrate(),
+      usePreferencesStore.getState().hydrate(),
+      useCustomTypesStore.getState().hydrate(),
+    ])
     toast.success('All data cleared')
+  }
+
+  function handleThresholdBlur() {
+    const val = parseInt(thresholdInput, 10)
+    if (!isNaN(val) && val > 0) {
+      updatePreferences({ hoursThreshold: val })
+    } else {
+      setThresholdInput(String(preferences.hoursThreshold ?? 40))
+    }
   }
 
   return (
@@ -90,6 +103,29 @@ export function SettingsPanel() {
             </button>
           ))}
         </div>
+      </div>
+
+      <Separator />
+
+      {/* Hours threshold */}
+      <div className="flex flex-col gap-3">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Weekly hours warning</p>
+        <div className="flex items-center gap-3">
+          <Input
+            type="number"
+            min="1"
+            max="168"
+            value={thresholdInput}
+            onChange={(e) => setThresholdInput(e.target.value)}
+            onBlur={handleThresholdBlur}
+            onKeyDown={(e) => e.key === 'Enter' && handleThresholdBlur()}
+            className="w-24"
+          />
+          <Label className="text-sm text-muted-foreground">hours/week</Label>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Employees exceeding this threshold are highlighted in the schedule summary.
+        </p>
       </div>
 
       <Separator />
@@ -183,7 +219,7 @@ export function SettingsPanel() {
           />
         </div>
         <p className="text-xs text-muted-foreground">
-          All data is stored in your browser's localStorage. Export regularly to avoid losing your schedules.
+          All data is stored locally in your browser. Export regularly to avoid losing your schedules.
         </p>
         <Button
           variant="ghost"
@@ -195,7 +231,6 @@ export function SettingsPanel() {
         </Button>
       </div>
 
-      {/* Label */}
       <div className="mt-2">
         <Label className="text-xs text-muted-foreground/60 font-normal">
           All data stays in your browser. Nothing is sent to any server.

@@ -5,7 +5,7 @@ import { loadBranding, saveBranding } from '@/lib/storage'
 interface BrandingState {
   branding: BrandingSettings
   updateBranding: (updates: Partial<BrandingSettings>) => void
-  hydrate: () => void
+  hydrate: () => Promise<void>
 }
 
 export const useBrandingStore = create<BrandingState>((set, get) => ({
@@ -15,8 +15,8 @@ export const useBrandingStore = create<BrandingState>((set, get) => ({
     companyName: '',
   },
 
-  hydrate() {
-    set({ branding: loadBranding() })
+  async hydrate() {
+    set({ branding: await loadBranding() })
   },
 
   updateBranding(updates) {

@@ -6,7 +6,6 @@ export interface Employee {
 }
 
 // ShiftType is a string; built-in values are listed below.
-// Custom shift types created by the user are stored by their id (nanoid).
 export type ShiftType = string
 
 export const BUILTIN_SHIFT_TYPE_IDS = ['normal', 'sick', 'leave', 'unavailable'] as const
@@ -39,6 +38,7 @@ export interface BrandingSettings {
 }
 
 export interface Preferences {
-  weekStartDay: 0 | 1   // 0 = Sunday, 1 = Monday
+  weekStartDay: 0 | 1      // 0 = Sunday, 1 = Monday
   hasSeenWelcome: boolean
+  hoursThreshold: number   // weekly hours warning threshold (default 40)
 }

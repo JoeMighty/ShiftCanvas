@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
-import { exportScheduleCSV } from '@/lib/export'
+import { exportScheduleCSV, exportScheduleExcel, exportScheduleImage } from '@/lib/export'
 import {
   ChevronLeft,
   ChevronRight,
@@ -26,6 +26,9 @@ import {
   CalendarDays,
   Upload,
   AlertTriangle,
+  Copy,
+  FileSpreadsheet,
+  Image,
 } from 'lucide-react'
 import type { ShiftType } from '@/types'
 
@@ -64,14 +67,16 @@ export function ScheduleGrid({ onOpenEmployees }: { onOpenEmployees?: () => void
   const { weekStart, setWeekStart, upsertShift, removeShift, getShift, clearShiftsForDates } = useScheduleStore()
   const { types: customTypes } = useCustomTypesStore()
   const { preferences } = usePreferencesStore()
-  const { weekStartDay } = preferences
+  const { weekStartDay, hoursThreshold = 40 } = preferences
 
   const [timeDialog, setTimeDialog] = useState<TimeDialog | null>(null)
   const [dialogStart, setDialogStart] = useState('09:00')
   const [dialogEnd, setDialogEnd] = useState('17:00')
+  const [roleFilter, setRoleFilter] = useState<string | null>(null)
 
   const isPainting = useRef(false)
   const paintData = useRef<{ start: string; end: string; type: string } | null>(null)
+  const gridRef = useRef<HTMLDivElement>(null)
 
   const todayStr = dayjs().format('YYYY-MM-DD')
 
@@ -100,6 +105,12 @@ export function ScheduleGrid({ onOpenEmployees }: { onOpenEmployees?: () => void
     return () => window.removeEventListener('mouseup', stop)
   }, [])
 
+  // Unique roles for filter chips
+  const allRoles = Array.from(new Set(employees.map(e => e.role).filter((r): r is string => !!r)))
+  const visibleEmployees = roleFilter
+    ? employees.filter(e => e.role === roleFilter)
+    : employees
+
   function getTypeLabel(type: string): string {
     const custom = customTypes.find(t => t.id === type)
     if (custom) return custom.label
@@ -117,9 +128,43 @@ export function ScheduleGrid({ onOpenEmployees }: { onOpenEmployees?: () => void
     toast.success('Week cleared')
   }
 
+  function handleCopyLastWeek() {
+    const lastWeekDays = Array.from({ length: 7 }, (_, i) => startDate.subtract(7, 'day').add(i, 'day'))
+    let copied = 0
+    employees.forEach(emp => {
+      lastWeekDays.forEach((lastDay, i) => {
+        const lastShift = getShift(emp.id, lastDay.format('YYYY-MM-DD'))
+        if (lastShift) {
+          upsertShift({
+            employeeId: emp.id,
+            date: days[i].format('YYYY-MM-DD'),
+            start: lastShift.start,
+            end: lastShift.end,
+            type: lastShift.type,
+          })
+          copied++
+        }
+      })
+    })
+    if (copied > 0) toast.success(`Copied ${copied} shift${copied !== 1 ? 's' : ''} from last week`)
+    else toast.info('No shifts last week to copy')
+  }
+
   function handleExportCSV() {
     exportScheduleCSV(employees, days, getShift, getTypeLabel)
     toast.success('Schedule exported as CSV')
+  }
+
+  async function handleExportExcel() {
+    await exportScheduleExcel(employees, days, getShift, getTypeLabel)
+    toast.success('Schedule exported as Excel')
+  }
+
+  async function handleExportImage() {
+    if (!gridRef.current) return
+    const weekLabel = `${startDate.format('YYYY-MM-DD')}`
+    await exportScheduleImage(gridRef.current, weekLabel)
+    toast.success('Schedule saved as image')
   }
 
   function openTimeDialog(
@@ -216,10 +261,22 @@ export function ScheduleGrid({ onOpenEmployees }: { onOpenEmployees?: () => void
         <Button variant="outline" size="sm" className="text-xs" onClick={goToday}>
           Today
         </Button>
-        <div className="ml-auto flex items-center gap-1">
+        <div className="ml-auto flex items-center gap-1 flex-wrap">
+          <Button variant="ghost" size="sm" className="text-xs gap-1.5" onClick={handleCopyLastWeek}>
+            <Copy className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Copy last week</span>
+          </Button>
           <Button variant="ghost" size="sm" className="text-xs gap-1.5" onClick={handleExportCSV}>
             <Download className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Export CSV</span>
+            <span className="hidden sm:inline">CSV</span>
+          </Button>
+          <Button variant="ghost" size="sm" className="text-xs gap-1.5" onClick={handleExportExcel}>
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Excel</span>
+          </Button>
+          <Button variant="ghost" size="sm" className="text-xs gap-1.5" onClick={handleExportImage}>
+            <Image className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Image</span>
           </Button>
           <Button
             variant="ghost"
@@ -228,13 +285,43 @@ export function ScheduleGrid({ onOpenEmployees }: { onOpenEmployees?: () => void
             onClick={handleClearWeek}
           >
             <Trash2 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Clear week</span>
+            <span className="hidden sm:inline">Clear</span>
           </Button>
         </div>
       </div>
 
+      {/* Role filter chips */}
+      {allRoles.length > 0 && (
+        <div className="hidden md:flex items-center gap-1.5 flex-wrap">
+          <span className="text-xs text-muted-foreground">Filter:</span>
+          <button
+            onClick={() => setRoleFilter(null)}
+            className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+              roleFilter === null
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'border-border text-muted-foreground hover:bg-muted'
+            }`}
+          >
+            All
+          </button>
+          {allRoles.map(role => (
+            <button
+              key={role}
+              onClick={() => setRoleFilter(roleFilter === role ? null : role)}
+              className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                roleFilter === role
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'border-border text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              {role}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Desktop grid */}
-      <div className="hidden md:block overflow-x-auto rounded-lg border border-border bg-card">
+      <div ref={gridRef} className="hidden md:block overflow-x-auto rounded-lg border border-border bg-card">
         <table className="border-collapse text-sm min-w-full">
           <thead>
             <tr className="bg-muted/40">
@@ -272,13 +359,13 @@ export function ScheduleGrid({ onOpenEmployees }: { onOpenEmployees?: () => void
             </tr>
           </thead>
           <tbody>
-            {employees.map(emp => {
+            {visibleEmployees.map(emp => {
               const weekShifts = days.map(d => getShift(emp.id, d.format('YYYY-MM-DD'))).filter((s): s is NonNullable<typeof s> => !!s)
               const totalHours = weekShifts
                 .filter(s => s.type === 'normal' || !['sick', 'leave', 'unavailable'].includes(s.type))
                 .reduce((acc, s) => acc + calcShiftHours(s.start, s.end), 0)
               const hasConflict = weekShifts.some(s => s.type === 'normal' && isTimeConflict(s.start, s.end))
-              const isOverHours = totalHours > 40
+              const isOverHours = totalHours > hoursThreshold
 
               return (
                 <tr key={emp.id} className="hover:bg-muted/20 transition-colors">
@@ -359,7 +446,7 @@ export function ScheduleGrid({ onOpenEmployees }: { onOpenEmployees?: () => void
                               <AlertTriangle className="w-3 h-3 text-amber-500" />
                             </TooltipTrigger>
                             <TooltipContent>
-                              {hasConflict ? 'Invalid shift time' : 'Over 40h this week'}
+                              {hasConflict ? 'Invalid shift time' : `Over ${hoursThreshold}h this week`}
                             </TooltipContent>
                           </Tooltip>
                         )}

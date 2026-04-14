@@ -1,4 +1,5 @@
 import type { Employee, Shift, Template, BrandingSettings, CustomShiftType, Preferences } from '@/types'
+import { idbGet, idbSet, idbDelete } from '@/lib/idb'
 
 const KEYS = {
   EMPLOYEES: 'shiftcanvas_employees',
@@ -12,107 +13,108 @@ const KEYS = {
 
 export const ALL_STORAGE_KEYS = Object.values(KEYS)
 
-function safeGet<T>(key: string, fallback: T): T {
-  try {
+// --- Migration from localStorage to IndexedDB (runs once) ---
+const MIGRATION_FLAG = 'shiftcanvas_migrated_v2'
+
+export async function migrateFromLocalStorage(): Promise<void> {
+  if (localStorage.getItem(MIGRATION_FLAG)) return
+  const moved: string[] = []
+  for (const key of ALL_STORAGE_KEYS) {
     const raw = localStorage.getItem(key)
-    if (!raw) return fallback
-    return JSON.parse(raw) as T
-  } catch {
-    return fallback
+    if (raw) {
+      try {
+        await idbSet(key, JSON.parse(raw))
+        localStorage.removeItem(key)
+        moved.push(key)
+      } catch { /* leave in localStorage if migration fails */ }
+    }
   }
+  if (moved.length > 0) console.info('ShiftCanvas: migrated', moved.length, 'keys to IndexedDB')
+  localStorage.setItem(MIGRATION_FLAG, '1')
 }
 
-function safeSet(key: string, value: unknown): void {
-  try {
-    localStorage.setItem(key, JSON.stringify(value))
-  } catch {
-    console.error('ShiftCanvas: failed to save to localStorage')
-  }
+// --- Employees ---
+export async function saveEmployees(employees: Employee[]): Promise<void> {
+  await idbSet(KEYS.EMPLOYEES, employees)
+}
+export async function loadEmployees(): Promise<Employee[]> {
+  return idbGet<Employee[]>(KEYS.EMPLOYEES, [])
 }
 
-// Employees
-export function saveEmployees(employees: Employee[]): void {
-  safeSet(KEYS.EMPLOYEES, employees)
+// --- Schedule ---
+export async function saveSchedule(shifts: Shift[]): Promise<void> {
+  await idbSet(KEYS.SCHEDULE, shifts)
 }
-export function loadEmployees(): Employee[] {
-  return safeGet<Employee[]>(KEYS.EMPLOYEES, [])
-}
-
-// Schedule
-export function saveSchedule(shifts: Shift[]): void {
-  safeSet(KEYS.SCHEDULE, shifts)
-}
-export function loadSchedule(): Shift[] {
-  return safeGet<Shift[]>(KEYS.SCHEDULE, [])
+export async function loadSchedule(): Promise<Shift[]> {
+  return idbGet<Shift[]>(KEYS.SCHEDULE, [])
 }
 
-// Templates
-export function saveTemplates(templates: Template[]): void {
-  safeSet(KEYS.TEMPLATES, templates)
+// --- Templates ---
+export async function saveTemplates(templates: Template[]): Promise<void> {
+  await idbSet(KEYS.TEMPLATES, templates)
 }
-export function loadTemplates(): Template[] {
-  return safeGet<Template[]>(KEYS.TEMPLATES, [])
+export async function loadTemplates(): Promise<Template[]> {
+  return idbGet<Template[]>(KEYS.TEMPLATES, [])
 }
 
-// Branding
-export function saveBranding(settings: BrandingSettings): void {
-  safeSet(KEYS.BRANDING, settings)
+// --- Branding ---
+export async function saveBranding(settings: BrandingSettings): Promise<void> {
+  await idbSet(KEYS.BRANDING, settings)
 }
-export function loadBranding(): BrandingSettings {
-  return safeGet<BrandingSettings>(KEYS.BRANDING, {
+export async function loadBranding(): Promise<BrandingSettings> {
+  return idbGet<BrandingSettings>(KEYS.BRANDING, {
     logo: null,
     primaryColour: '#2563eb',
     companyName: '',
   })
 }
 
-// Week start date
-export function saveWeekStart(date: string): void {
-  safeSet(KEYS.WEEK_START, date)
+// --- Week start ---
+export async function saveWeekStart(date: string): Promise<void> {
+  await idbSet(KEYS.WEEK_START, date)
 }
-export function loadWeekStart(): string {
-  return safeGet<string>(KEYS.WEEK_START, '')
+export async function loadWeekStart(): Promise<string> {
+  return idbGet<string>(KEYS.WEEK_START, '')
 }
 
-// Preferences
-export function savePreferences(prefs: Preferences): void {
-  safeSet(KEYS.PREFERENCES, prefs)
+// --- Preferences ---
+export async function savePreferences(prefs: Preferences): Promise<void> {
+  await idbSet(KEYS.PREFERENCES, prefs)
 }
-export function loadPreferences(): Preferences {
-  return safeGet<Preferences>(KEYS.PREFERENCES, {
+export async function loadPreferences(): Promise<Preferences> {
+  return idbGet<Preferences>(KEYS.PREFERENCES, {
     weekStartDay: 1,
     hasSeenWelcome: false,
+    hoursThreshold: 40,
   })
 }
 
-// Custom shift types
-export function saveCustomTypes(types: CustomShiftType[]): void {
-  safeSet(KEYS.CUSTOM_TYPES, types)
+// --- Custom shift types ---
+export async function saveCustomTypes(types: CustomShiftType[]): Promise<void> {
+  await idbSet(KEYS.CUSTOM_TYPES, types)
 }
-export function loadCustomTypes(): CustomShiftType[] {
-  return safeGet<CustomShiftType[]>(KEYS.CUSTOM_TYPES, [])
+export async function loadCustomTypes(): Promise<CustomShiftType[]> {
+  return idbGet<CustomShiftType[]>(KEYS.CUSTOM_TYPES, [])
 }
 
-// Data management helpers
-export function exportAllData(): Record<string, unknown> {
+// --- Data management ---
+export async function exportAllData(): Promise<Record<string, unknown>> {
   const data: Record<string, unknown> = {}
-  ALL_STORAGE_KEYS.forEach(key => {
-    const raw = localStorage.getItem(key)
-    if (raw) {
-      try { data[key] = JSON.parse(raw) } catch { /* skip */ }
-    }
-  })
+  for (const key of ALL_STORAGE_KEYS) {
+    const val = await idbGet<unknown>(key, undefined)
+    if (val !== undefined) data[key] = val
+  }
   return data
 }
 
-export function importAllData(data: Record<string, unknown>): void {
-  ALL_STORAGE_KEYS.forEach(key => {
-    if (key in data) {
-      localStorage.setItem(key, JSON.stringify(data[key]))
-    }
-  })
+export async function importAllData(data: Record<string, unknown>): Promise<void> {
+  for (const key of ALL_STORAGE_KEYS) {
+    if (key in data) await idbSet(key, data[key])
+  }
 }
 
-export function clearAllData(): void {
-  ALL_STORAGE_KEYS.forEach(key => localStorage.removeItem(key))
+export async function clearAllData(): Promise<void> {
+  for (const key of ALL_STORAGE_KEYS) {
+    await idbDelete(key)
+  }
 }

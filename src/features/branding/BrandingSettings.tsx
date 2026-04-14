@@ -38,12 +38,12 @@ export function BrandingSettings() {
             <img
               src={branding.logo}
               alt="Logo"
-              className="h-10 object-contain rounded border border-gray-100 px-2"
+              className="h-10 object-contain rounded border border-border px-2"
             />
             <Button
               variant="ghost"
               size="sm"
-              className="text-gray-400 hover:text-red-500 gap-1"
+              className="text-muted-foreground hover:text-destructive gap-1"
               onClick={() => updateBranding({ logo: null })}
             >
               <X className="w-3.5 h-3.5" />
@@ -84,7 +84,7 @@ export function BrandingSettings() {
             type="color"
             value={branding.primaryColour}
             onChange={(e) => updateBranding({ primaryColour: e.target.value })}
-            className="w-10 h-10 rounded border border-gray-200 cursor-pointer p-1"
+            className="w-10 h-10 rounded border border-border cursor-pointer p-1"
           />
           <Input
             value={branding.primaryColour}
