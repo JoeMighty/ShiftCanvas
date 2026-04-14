@@ -5,7 +5,7 @@ import { nanoid } from '@/lib/utils'
 
 interface CustomTypesState {
   types: CustomShiftType[]
-  addType: (label: string, colour: string) => void
+  addType: (label: string, colour: string, start?: string, end?: string) => void
   removeType: (id: string) => void
   hydrate: () => Promise<void>
 }
@@ -17,8 +17,11 @@ export const useCustomTypesStore = create<CustomTypesState>((set, get) => ({
     set({ types: await loadCustomTypes() })
   },
 
-  addType(label, colour) {
-    const next = [...get().types, { id: nanoid(), label, colour }]
+  addType(label, colour, start, end) {
+    const entry: import('@/types').CustomShiftType = { id: nanoid(), label, colour }
+    if (start) entry.start = start
+    if (end) entry.end = end
+    const next = [...get().types, entry]
     saveCustomTypes(next)
     set({ types: next })
   },

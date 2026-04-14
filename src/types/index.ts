@@ -14,6 +14,8 @@ export interface CustomShiftType {
   id: string
   label: string
   colour: string // hex
+  start?: string  // HH:MM default start time (optional)
+  end?: string    // HH:MM default end time (optional)
 }
 
 export interface Shift {

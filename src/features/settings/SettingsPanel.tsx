@@ -21,14 +21,18 @@ export function SettingsPanel() {
 
   const [newTypeLabel, setNewTypeLabel] = useState('')
   const [newTypeColour, setNewTypeColour] = useState('#6366f1')
+  const [newTypeStart, setNewTypeStart] = useState('')
+  const [newTypeEnd, setNewTypeEnd] = useState('')
   const [thresholdInput, setThresholdInput] = useState(String(preferences.hoursThreshold ?? 40))
 
   function handleAddType() {
     const label = newTypeLabel.trim()
     if (!label) return
-    addType(label, newTypeColour)
+    addType(label, newTypeColour, newTypeStart || undefined, newTypeEnd || undefined)
     setNewTypeLabel('')
     setNewTypeColour('#6366f1')
+    setNewTypeStart('')
+    setNewTypeEnd('')
   }
 
   async function handleExport() {
@@ -143,17 +147,22 @@ export function SettingsPanel() {
                   i < types.length - 1 ? 'border-b border-border/50' : ''
                 }`}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                   <span
                     className="w-4 h-4 rounded-sm border shrink-0"
                     style={{ backgroundColor: t.colour + '33', borderColor: t.colour }}
                   />
-                  <span className="text-sm text-foreground">{t.label}</span>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm text-foreground">{t.label}</span>
+                    {t.start && t.end && (
+                      <span className="text-[10px] text-muted-foreground">{t.start} - {t.end}</span>
+                    )}
+                  </div>
                 </div>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6 text-muted-foreground/40 hover:text-destructive"
+                  className="h-6 w-6 text-muted-foreground/40 hover:text-destructive shrink-0"
                   onClick={() => removeType(t.id)}
                   aria-label={`Remove ${t.label}`}
                 >
@@ -164,27 +173,46 @@ export function SettingsPanel() {
           </div>
         )}
 
-        <div className="flex gap-2">
-          <input
-            type="color"
-            value={newTypeColour}
-            onChange={(e) => setNewTypeColour(e.target.value)}
-            className="w-10 h-9 rounded border border-border cursor-pointer p-1 shrink-0"
-            aria-label="Shift type colour"
-          />
-          <Input
-            placeholder="Label (e.g. Evening)"
-            value={newTypeLabel}
-            onChange={(e) => setNewTypeLabel(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAddType()}
-            className="flex-1"
-          />
-          <Button size="icon" onClick={handleAddType} disabled={!newTypeLabel.trim()}>
-            <Plus className="w-4 h-4" />
-          </Button>
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-2">
+            <input
+              type="color"
+              value={newTypeColour}
+              onChange={(e) => setNewTypeColour(e.target.value)}
+              className="w-10 h-9 rounded border border-border cursor-pointer p-1 shrink-0"
+              aria-label="Shift type colour"
+            />
+            <Input
+              placeholder="Label (e.g. Evening)"
+              value={newTypeLabel}
+              onChange={(e) => setNewTypeLabel(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddType()}
+              className="flex-1"
+            />
+            <Button size="icon" onClick={handleAddType} disabled={!newTypeLabel.trim()}>
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+          <div className="flex gap-2 items-center">
+            <input
+              type="time"
+              value={newTypeStart}
+              onChange={(e) => setNewTypeStart(e.target.value)}
+              className="flex-1 h-9 rounded-md border border-input bg-background px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+              aria-label="Default start time"
+            />
+            <span className="text-xs text-muted-foreground shrink-0">to</span>
+            <input
+              type="time"
+              value={newTypeEnd}
+              onChange={(e) => setNewTypeEnd(e.target.value)}
+              className="flex-1 h-9 rounded-md border border-input bg-background px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+              aria-label="Default end time"
+            />
+          </div>
         </div>
         <p className="text-xs text-muted-foreground">
-          Custom types appear in every shift cell's dropdown alongside the built-in types.
+          Times are optional. When set, they auto-fill when you apply this type to a shift.
         </p>
       </div>
 

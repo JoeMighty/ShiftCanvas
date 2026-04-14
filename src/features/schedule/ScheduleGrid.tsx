@@ -409,12 +409,12 @@ export function ScheduleGrid({ onOpenEmployees }: { onOpenEmployees?: () => void
                         onAssign={(start, end, type) =>
                           upsertShift({ employeeId: emp.id, date: dateStr, start, end, type })
                         }
-                        onChangeType={(type: ShiftType) => {
-                          if (shift) upsertShift({ ...shift, type })
+                        onChangeType={(type: ShiftType, start?: string, end?: string) => {
+                          if (shift) upsertShift({ ...shift, type, ...(start ? { start } : {}), ...(end ? { end } : {}) })
                         }}
                         onRemove={() => { if (shift) removeShift(shift.id) }}
                         onEditTime={
-                          shift?.type === 'normal'
+                          shift && (shift.type === 'normal' || customTypes.some(t => t.id === shift.type && t.start))
                             ? () => openTimeDialog(emp.id, dateStr, emp.name, dayLabel, shift.start, shift.end)
                             : undefined
                         }

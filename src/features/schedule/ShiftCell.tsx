@@ -35,7 +35,7 @@ const BUILTIN_ICONS: Record<string, React.ReactNode> = {
 interface ShiftCellProps {
   shift: Shift | undefined
   onAssign: (start: string, end: string, type: string) => void
-  onChangeType: (type: string) => void
+  onChangeType: (type: string, start?: string, end?: string) => void
   onRemove: () => void
   onEditTime?: () => void
   onCopyToWeek?: () => void
@@ -122,7 +122,7 @@ export function ShiftCell({
           style={cellStyle}
         >
           <span>{getLabel(shift.type)}</span>
-          {shift.type === 'normal' && (
+          {(shift.type === 'normal' || customTypes.some(t => t.id === shift.type && t.start)) && (
             <span className="ml-1 opacity-60 text-[10px]">
               {shift.start} - {shift.end}
             </span>
@@ -142,12 +142,15 @@ export function ShiftCell({
             <>
               <DropdownMenuSeparator />
               {customTypes.map(ct => (
-                <DropdownMenuItem key={ct.id} onClick={() => { onChangeType(ct.id); setOpen(false) }}>
+                <DropdownMenuItem key={ct.id} onClick={() => { onChangeType(ct.id, ct.start, ct.end); setOpen(false) }}>
                   <span
                     className="w-3.5 h-3.5 rounded-sm mr-2 shrink-0 border"
                     style={{ backgroundColor: ct.colour + '33', borderColor: ct.colour }}
                   />
-                  {ct.label}
+                  <span className="flex-1">{ct.label}</span>
+                  {ct.start && ct.end && (
+                    <span className="text-[10px] text-muted-foreground ml-2 opacity-70">{ct.start}-{ct.end}</span>
+                  )}
                 </DropdownMenuItem>
               ))}
             </>
@@ -155,8 +158,8 @@ export function ShiftCell({
 
           <DropdownMenuSeparator />
 
-          {/* Edit time (normal shifts) */}
-          {shift.type === 'normal' && onEditTime && (
+          {/* Edit time (normal shifts and timed custom types) */}
+          {(shift.type === 'normal' || customTypes.some(t => t.id === shift.type && t.start)) && onEditTime && (
             <DropdownMenuItem onClick={() => { onEditTime(); setOpen(false) }}>
               <Pencil className="w-3.5 h-3.5 mr-2" />
               Edit time
