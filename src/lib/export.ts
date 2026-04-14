@@ -45,7 +45,7 @@ export async function exportScheduleExcel(
   getShift: (empId: string, date: string) => Shift | undefined,
   getTypeLabel: (type: string) => string,
 ): Promise<void> {
-  const XLSX = (await import('xlsx')).default
+  const XLSX = await import('xlsx')
   const headers = ['Employee', 'Role', ...days.map(d => d.format('ddd D MMM')), 'Shifts', 'Hours']
   const rows = employees.map(emp => {
     const shifts = days.map(d => getShift(emp.id, d.format('YYYY-MM-DD')))
